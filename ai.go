@@ -46,7 +46,7 @@ type score_return struct {
     plan [15]vec
 }
 
-var move_vecs [4]vec
+var move_vecs [8]vec
 
 func (s state) alive_score() float64 {
     if s.player.alive {
@@ -324,11 +324,15 @@ func (s state) take_move(depth int) state {
 }
 
 func main() {
-    move_vecs = [4]vec{
+    move_vecs = [8]vec{
         vec {x: 1, y: 0},
         vec {x: -1, y: 0},
         vec {x: 0, y: 1},
         vec {x: 0, y: -1},
+        vec {x: 1, y: 1},
+        vec {x: -1, y: -1},
+        vec {x: -1, y: 1},
+        vec {x: 1, y: -1},
     }
     depth, err := strconv.Atoi(os.Args[1])
     if err != nil {
