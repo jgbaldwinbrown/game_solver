@@ -2,6 +2,8 @@ package main
 
 import (
     "fmt"
+    "os"
+    "strconv"
 )
 
 type pos struct {
@@ -120,7 +122,7 @@ func (s state) update(v vec) state {
         if anenemy.move_count > 0 {
             n.enemies[index].move_count--
         } else {
-            n.enemies[index].move_count = 3
+            n.enemies[index].move_count = 13
             n.enemies[index].move_dir.x *= -1
             n.enemies[index].move_dir.y *= -1
         }
@@ -174,45 +176,58 @@ func (s state) score(depth int, planned_moves [15]vec) (float64, state, [15]vec)
 }
 
 func (s state) print_state() {
-    print_matrix := make([]string, 100)
-    for i := 0; i < 100; i++ {
+    print_matrix := make([]string, (40 * 20))
+    for i := 0; i < (40 * 20); i++ {
         print_matrix[i] = " "
     }
     for _, c := range s.coins {
-        print_matrix[c.p.y * 10 + c.p.x] = "$"
+        print_matrix[c.p.y * 40 + c.p.x] = "$"
     }
     for _, e := range s.enemies {
-        print_matrix[e.p.y * 10 + e.p.x] = "M"
+        print_matrix[e.p.y * 40 + e.p.x] = "M"
     }
     if s.player.p.x >= 0 && s.player.p.y >= 0 {
-        print_matrix[s.player.p.y * 10 + s.player.p.x] = "@"
+        print_matrix[s.player.p.y * 40 + s.player.p.x] = "@"
     }
 
-    fmt.Println("- - - - - - - - - - -")
-    for y := 0; y<10; y++ {
+    fmt.Println("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -")
+    for y := 0; y<20; y++ {
         fmt.Printf("|")
-        for x := 0; x<10; x++ {
-            fmt.Printf(" %s", print_matrix[y*10 + x])
+        for x := 0; x<40; x++ {
+            fmt.Printf(" %s", print_matrix[y*40 + x])
         }
         fmt.Printf("|\n")
     }
-    fmt.Println("- - - - - - - - - - -")
+    fmt.Println("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -")
 }
 
 func init_state() state {
     s := state{
         player: player {
-            p: pos{x: 2, y: 3},
+            p: pos{x: 1, y: 10},
             alive: true,
         },
         coins: make([]coin, 0),
         enemies: make([]enemy, 0),
         coins_collected: 0,
     }
-    s.coins = append(s.coins, coin{p: pos{x: 5, y: 6}, available: true})
-    s.coins = append(s.coins, coin{p: pos{x: 7, y: 8}, available: true})
-    s.enemies = append(s.enemies, enemy{p: pos{x: 4, y: 4}, move_dir: vec{x: 0, y: 1}, move_count: 3, alive: true})
-    s.turn = 10
+    s.coins = append(s.coins, coin{p: pos{x: 18, y: 10}, available: true})
+    s.coins = append(s.coins, coin{p: pos{x: 19, y: 10}, available: true})
+    s.coins = append(s.coins, coin{p: pos{x: 10, y: 5}, available: true})
+    s.coins = append(s.coins, coin{p: pos{x: 10, y: 10}, available: true})
+    s.enemies = append(s.enemies, enemy{p: pos{x: 8, y: 4}, move_dir: vec{x: 0, y: 1}, move_count: 13, alive: true})
+    s.enemies = append(s.enemies, enemy{p: pos{x: 9, y: 4}, move_dir: vec{x: 0, y: 1}, move_count: 13, alive: true})
+    s.enemies = append(s.enemies, enemy{p: pos{x: 10, y: 4}, move_dir: vec{x: 0, y: 1}, move_count: 13, alive: true})
+    s.enemies = append(s.enemies, enemy{p: pos{x: 11, y: 4}, move_dir: vec{x: 0, y: 1}, move_count: 13, alive: true})
+    s.enemies = append(s.enemies, enemy{p: pos{x: 12, y: 4}, move_dir: vec{x: 0, y: 1}, move_count: 13, alive: true})
+    s.enemies = append(s.enemies, enemy{p: pos{x: 13, y: 4}, move_dir: vec{x: 0, y: 1}, move_count: 13, alive: true})
+    s.enemies = append(s.enemies, enemy{p: pos{x: 8, y: 5}, move_dir: vec{x: 0, y: 1}, move_count: 13, alive: true})
+    s.enemies = append(s.enemies, enemy{p: pos{x: 9, y: 5}, move_dir: vec{x: 0, y: 1}, move_count: 13, alive: true})
+    s.enemies = append(s.enemies, enemy{p: pos{x: 10, y: 5}, move_dir: vec{x: 0, y: 1}, move_count: 13, alive: true})
+    s.enemies = append(s.enemies, enemy{p: pos{x: 11, y: 5}, move_dir: vec{x: 0, y: 1}, move_count: 13, alive: true})
+    s.enemies = append(s.enemies, enemy{p: pos{x: 12, y: 5}, move_dir: vec{x: 0, y: 1}, move_count: 13, alive: true})
+    s.enemies = append(s.enemies, enemy{p: pos{x: 13, y: 5}, move_dir: vec{x: 0, y: 1}, move_count: 13, alive: true})
+    s.turn = 100000
     s.time_bonus = 0
     return s
 }
@@ -268,6 +283,10 @@ func main() {
         vec {x: 0, y: 1},
         vec {x: 0, y: -1},
     }
+    depth, err := strconv.Atoi(os.Args[1])
+    if err != nil {
+        panic(err)
+    }
 
     // fmt.Printf("Current state:\n")
     my_state := init_state()
@@ -275,7 +294,7 @@ func main() {
     // fmt.Printf("Done with current state.\n")
     // fmt.Printf("%v\n", my_state)
     for my_state.alive() && my_state.coins_remain() {
-        my_state = my_state.take_move(11)
+        my_state = my_state.take_move(depth)
         // fmt.Printf("Current state:\n")
         my_state.print_state()
         // fmt.Printf("%v\n", my_state)
