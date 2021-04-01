@@ -46,7 +46,7 @@ type score_return struct {
     plan [15]vec
 }
 
-var move_vec_array [32]vec
+var move_vec_array [24]vec
 var move_vecs []vec
 
 func (s state) alive_score() float64 {
@@ -325,7 +325,7 @@ func (s state) take_move(depth int) state {
 }
 
 func main() {
-    move_vec_array = [32]vec{
+    move_vec_array = [24]vec{
         vec {x: 1, y: 0},
         vec {x: -1, y: 0},
         vec {x: 0, y: 1},
@@ -344,19 +344,11 @@ func main() {
         vec {x: -2, y: 2},
         vec {x: 2, y: -2},
 
-        vec {x: 1, y: 0},
-        vec {x: -1, y: 0},
-        vec {x: 0, y: 2},
-        vec {x: 0, y: -2},
         vec {x: 1, y: 2},
         vec {x: -1, y: -2},
         vec {x: -1, y: 2},
         vec {x: 1, y: -2},
 
-        vec {x: 2, y: 0},
-        vec {x: -2, y: 0},
-        vec {x: 0, y: 1},
-        vec {x: 0, y: -1},
         vec {x: 2, y: 1},
         vec {x: -2, y: -1},
         vec {x: -2, y: 1},
