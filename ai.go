@@ -46,7 +46,8 @@ type score_return struct {
     plan [15]vec
 }
 
-var move_vecs [32]vec
+var move_vec_array [32]vec
+var move_vecs []vec
 
 func (s state) alive_score() float64 {
     if s.player.alive {
@@ -153,7 +154,7 @@ func (s state) update(v vec) state {
     return n
 }
 func (s state) score(depth int) (float64, state, [15]vec) {
-    var return_scores [len(move_vecs)]score_return
+    var return_scores = make([]score_return, len(move_vecs))
     var my_score float64 = -1.0e25
     var my_state state
     var my_move vec
@@ -184,7 +185,7 @@ func (s state) score(depth int) (float64, state, [15]vec) {
 func (s state) score_parallel(parent_wg *sync.WaitGroup, depth int, planned_moves [15]vec, my_return *score_return) {
     defer parent_wg.Done()
 
-    var return_scores [len(move_vecs)]score_return
+    var return_scores = make([]score_return, len(move_vecs))
     var my_score float64 = -1.0e25
     var my_state state
     var my_move vec
@@ -324,7 +325,7 @@ func (s state) take_move(depth int) state {
 }
 
 func main() {
-    move_vecs = [32]vec{
+    move_vec_array = [32]vec{
         vec {x: 1, y: 0},
         vec {x: -1, y: 0},
         vec {x: 0, y: 1},
@@ -366,6 +367,11 @@ func main() {
     if err != nil {
         panic(err)
     }
+    move_choices, err := strconv.Atoi(os.Args[2])
+    if err != nil {
+        panic(err)
+    }
+    move_vecs = move_vec_array[:move_choices]
 
     // fmt.Printf("Current state:\n")
     my_state := init_state()
