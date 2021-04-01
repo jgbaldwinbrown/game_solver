@@ -4,6 +4,7 @@ import (
     "fmt"
     "os"
     "strconv"
+    "sync"
 )
 
 type pos struct {
@@ -37,6 +38,12 @@ type state struct {
     coins_collected int
     turn int
     time_bonus int
+}
+
+type score_return struct {
+    score float64
+    state state
+    plan [15]vec
 }
 
 var move_vecs [4]vec
@@ -145,19 +152,59 @@ func (s state) update(v vec) state {
 
     return n
 }
-
-func (s state) score(depth int, planned_moves [15]vec) (float64, state, [15]vec) {
+func (s state) score(depth int) (float64, state, [15]vec) {
+    var return_scores [len(move_vecs)]score_return
     var my_score float64 = -1.0e25
     var my_state state
     var my_move vec
+    var wg sync.WaitGroup
+    var planned_moves [15]vec
+
+    for i := 0; i < len(move_vecs); i++ {
+        new_state := s.update(move_vecs[i])
+        wg.Add(1)
+        go new_state.score_parallel(&wg, depth - 1, planned_moves, &return_scores[i])
+    }
+
+    wg.Wait()
+
+    for i := 0; i < len(move_vecs); i++ {
+        this_return := return_scores[i]
+        if my_score < this_return.score {
+            my_score = this_return.score
+            my_state = this_return.state
+            my_move = move_vecs[i]
+            planned_moves = this_return.plan
+        }
+    }
+    planned_moves[depth] = my_move
+    return my_score, my_state, planned_moves
+}
+
+func (s state) score_parallel(parent_wg *sync.WaitGroup, depth int, planned_moves [15]vec, my_return *score_return) {
+    defer parent_wg.Done()
+
+    var return_scores [len(move_vecs)]score_return
+    var my_score float64 = -1.0e25
+    var my_state state
+    var my_move vec
+    var wg sync.WaitGroup
+
     if depth > 0 {
         for i := 0; i < len(move_vecs); i++ {
-            new_score, new_state, a_plan := s.update(move_vecs[i]).score(depth - 1, planned_moves)
-            if my_score < new_score {
-                my_score = new_score
-                my_state = new_state
+            new_state := s.update(move_vecs[i])
+            wg.Add(1)
+            new_state.score_parallel(&wg, depth - 1, planned_moves, &return_scores[i])
+        }
+        wg.Wait()
+
+        for i := 0; i < len(move_vecs); i++ {
+            this_return := return_scores[i]
+            if my_score < this_return.score {
+                my_score = this_return.score
+                my_state = this_return.state
                 my_move = move_vecs[i]
-                planned_moves = a_plan
+                planned_moves = this_return.plan
             }
         }
     } else {
@@ -172,7 +219,9 @@ func (s state) score(depth int, planned_moves [15]vec) (float64, state, [15]vec)
         */
     }
     planned_moves[depth] = my_move
-    return my_score, my_state, planned_moves
+    my_return.state = my_state
+    my_return.plan = planned_moves
+    my_return.score = my_score
 }
 
 func (s state) print_state() {
@@ -248,18 +297,16 @@ func (s state) coins_remain() bool {
 func (s state) take_move(depth int) state {
     chosen_move := vec{x: 0, y: 0}
     move_score := float64(-1.0e20)
-    var planned_moves [15]vec
-    var aplan [15]vec
+    // var planned_moves [15]vec
     // var ideal_state state
     // fmt.Printf("Testing moves\n")
     for _, move := range move_vecs {
         // fmt.Printf("Testing move %v\n", move)
-        var new_score float64
-        new_score, _, aplan = s.update(move).score(depth, planned_moves)
+        new_score, _, _ := s.update(move).score(depth)
         if new_score >= move_score {
             chosen_move = move
             move_score = new_score
-            planned_moves = aplan
+            // planned_moves = aplan
         }
         // fmt.Printf("Possible move: %v\n", move)
         // fmt.Printf("Possible score: %v\n", new_score)
